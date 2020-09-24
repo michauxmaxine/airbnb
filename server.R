@@ -6,11 +6,15 @@ library(leaflet)
 
 library(DT)
 
+library(data.table)
+
+library("RColorBrewer")
+
 shinyServer(function(input, output, session) {
     # Import Data and clean it
     
     bb_data <- read.csv("~/Documents/M2/Cours_Agro_J1_Programmation_R/archive/AB_NYC_2019.csv", stringsAsFactors = FALSE )
-    bb_data <- data.frame(bb_data[1:100,]) # just 100 premiers pour pas bloquer l'ordi 
+    bb_data <- data.frame(bb_data[1:10,]) # just 100 premiers pour pas bloquer l'ordi 
     bb_data$latitude <-  as.numeric(bb_data$latitude)
     bb_data$longitude <-  as.numeric(bb_data$longitude)
     bb_data=filter(bb_data, latitude != "NA") # removing NA values
@@ -39,21 +43,32 @@ shinyServer(function(input, output, session) {
                 onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
     })
     
-    output$picture <-
-        renderText({
-            c('<img src="',
-                "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.airbnb.fr%2Fd%2Fonlinehost&psig=AOvVaw3EZTjMkc-dIATykAqbk3wf&ust=1600939819917000&source=images&cd=vfe&ved=0CAIQjRxqFwoTCMD0qd37_usCFQAAAAAdAAAAABAD",
-                '">'            )
-        })
     
     #create a data object to display data
     
     output$data <-DT::renderDataTable(datatable(
-        bb_data[,c(10)],filter = 'top',
+        bb_data[,c(10,11)],filter = 'top',
         colnames = c("id", "name", "host_id", "host_name", "neighbourhood_group", "neighbourhood","latitude",
                      "longitude","room_type","price","minimum_nights", "number_of_reviews","last_review", "reviews_per_month",
                      "calculated_host_listings_count", "availability_365")
     ))
-    
+    output$graph <- renderPlotly({
+        
+        airbnb <- fread("~/Documents/M2/Cours_Agro_J1_Programmation_R/archive/AB_NYC_2019.csv")
+        
+        entire_room <- (airbnb[room_type == "Entire home/apt", .N])
+        private_room <- (airbnb[room_type == "Private room", .N])
+        shared_room <- airbnb[room_type == "Shared room", .N]
+        stats <- airbnb[, list("room-entier" = mean(entire_room),
+                               "chbr_privee" = mean(private_room), "chambre partagee" = mean(shared_room)), by = neighbourhood_group]
+        
+        fig <- plot_ly(stats, x = airbnb$neighbourhood_group, y = entire_room, type = 'bar', name = 'entire room', marker = list(color ="FF99CC"))
+        fig <- fig %>% add_trace(y = private_room, name = 'private room',marker = list(color = "#900033"))
+        fig <- fig %>% add_trace(y = shared_room, name = 'shared room',marker = list(color = "#FF0000"))
+        fig <- fig %>% layout(yaxis = list(title = 'Count'), barmode = 'stack')
+        fig
+
+    })
     
 })
+
