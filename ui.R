@@ -1,26 +1,27 @@
 library(shiny)
 library(leaflet)
+library(plotly)
 
-shinyUI(navbarPage(theme = "bootstrap.css",
-                      # Application title.
-                      title = div(span(img(src = "airBnb.gif",height = 175, width = 50*2.85*3),
-                                       "airbnb",
-                                       style = "font-family: 'American Typewriter'; font-size : 60pt; color: #cd469c")),
+shinyUI(navbarPage(theme = "style.css",
+                    title = "Airbnb",
+                   fluid = TRUE, 
+                   collapsible = TRUE,
+                   
                    #1
                    tabPanel("Home",
-                            h1("Nous allons etudier les airbnb de New York.", style =  "font-family: 'Bookman, URW '; font-size : 20pt; color: #FF3399;text-align: center"),
-                            h1("Les donnees utilisees sont fournies par Airbnb. L'ensemble des airbnbs presents a New York y sont repertories. ",style = "font-family: 'Bookman, URW '; font-size : 20pt; color: #FF3399 ; text-align: center"),                             
-                            div(span(img(src = "newyork.jpg",height = 200, width = 150*2.85*3)))
-            
+                            h1("New York n'attend que vous !",style = "font-family: 'Bookman, URW '; font-size : 20pt; color: #FF3399 ; text-align: center"),                             
+                            div(span(img(src = "newyork.jpg",height = 200, width = 150*2.85*3))),
                    ),
                    
-                   #2
-                   tabPanel("Data",
-                            DT::dataTableOutput("data"),
-                   ),
+                   
                    
                    #3
                    tabPanel("Map",
+                            textOutput("selected_var"),
+                            selectInput("var", 
+                                        label = "Choose a variable to display",
+                                        choices = airbnb$neighbourhood_group,
+                                        selected = "Percent White"),
                             h1("La carte ci dessous represente l'emplacement des airbnbs du jeu de donnees", style = "font-family: 'Bookman, URW '; font-size : 20pt; color: #FF3399 ; text-align: center"),
                             h5("Vous pouvez trouver lors du passage du curseur sur les points le nom de l'hote ainsi que le prix pour une nuit", style = "font-family: 'Bookman, URW '; font-size : 15pt; color: #FF3399 ; text-align: center"),
                             leafletOutput("bbmap", height=1000)
@@ -29,8 +30,13 @@ shinyUI(navbarPage(theme = "bootstrap.css",
                    ),
                    #4
                    tabPanel("Analyse",
-                            plotlyOutput("graph")
-                            
+                            plotlyOutput("graph"),
+                            plotlyOutput("graph_price"),
+                            plotlyOutput("graph_nb_hote")
+                            ),
+                   #4
+                   tabPanel("Nous",
+                            includeHTML("footer.html")
                             )
                   )
                    
